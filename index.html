@@ -765,17 +765,17 @@
                             <div class="toc-number">1</div>
                             <div class="toc-text"><strong>Block Volume Migration</strong> - Copy to another region, Cross-region replication</div>
                         </div>
-                        <div class="toc-item" onclick="scrollToSection('hcx-ocvs')">
+                        <div class="toc-item" onclick="scrollToSection('hcx-intro')">
                             <div class="toc-number">2</div>
-                            <div class="toc-text"><strong>Hybrid Cloud Extension (HCX)</strong> và <strong>Oracle Cloud VMware Solution (OCVS)</strong></div>
+                            <div class="toc-text"><strong>Hybrid Cloud Extension (HCX)</strong> - Giới thiệu và các phương pháp Migration</div>
                         </div>
                         <div class="toc-item" onclick="scrollToSection('oke')">
                             <div class="toc-number">3</div>
-                            <div class="toc-text"><strong>OCI Container Engine for Kubernetes (OKE)</strong> - Các giai đoạn Migration, Load Balancer</div>
+                            <div class="toc-text"><strong>OCI Container Engine for Kubernetes (OKE)</strong> - Các giai đoạn Migration</div>
                         </div>
                         <div class="toc-item" onclick="scrollToSection('database-migration')">
                             <div class="toc-number">4</div>
-                            <div class="toc-text"><strong>OCI Database Migration service</strong> và <strong>Zero Downtime Migration (ZDM)</strong></div>
+                            <div class="toc-text"><strong>Database Migration</strong> - ZDM và Autonomous Database</div>
                         </div>
                         <div class="toc-item" onclick="scrollToSection('ocm')">
                             <div class="toc-number">5</div>
@@ -1547,7 +1547,112 @@
                             <div class="card">
                                 <div class="card-header">
                                     <div class="card-icon">
-                                        <i class="material-icons">dns</i>
+                                        <i class="material-icons">sync</i>
+                                    </div>
+                                    <h3 class="card-title">Oracle Zero Downtime Migration (ZDM)</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">ZDM</span> là công cụ automation giúp thực hiện database migration với minimal hoặc zero downtime.</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">Data Guard</span> - Physical online migration</li>
+                                        <li><span class="highlight">Data Pump</span> - Logical offline migration</li>
+                                        <li><span class="highlight">GoldenGate</span> - Logical online migration</li>
+                                        <li><span class="highlight">Remote Cloning</span> - Physical offline migration</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <img src="https://sfile.chatglm.cn/images-ppt/8ee4a0dad41a.png" alt="Database Migration Architecture">
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">cloud_done</i>
+                                    </div>
+                                    <h3 class="card-title">Migration đến Autonomous Database</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 15px;">
+                                        <strong style="color: var(--oracle-red);">Phương pháp hiệu quả nhất cho logical online migration:</strong>
+                                    </div>
+                                    <div style="margin-left: 20px;">
+                                        <div style="margin-bottom: 8px;"><strong>A.</strong> Oracle Enterprise Manager Migration Workbench <span style="color: #C62828; font-weight: 600;">(Sai)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>B.</strong> Oracle SQL Developer <span style="color: #C62828; font-weight: 600;">(Sai)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>C.</strong> OCI Database Migration Service <span style="color: #2E7D32; font-weight: 600;">(Đúng)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>D.</strong> Oracle GoldenGate <span style="color: #2E7D32; font-weight: 600;">(Đúng)</span></div>
+                                    </div>
+                                    <div style="margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+                                        <strong>Giải thích:</strong> Cả OCI Database Migration Service và Oracle GoldenGate đều hỗ trợ logical online migration đến Autonomous Database và được ZDM service hỗ trợ.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- So sánh các phương pháp Database Migration -->
+                    <div style="background: var(--oracle-light); border-radius: 15px; padding: 30px; margin: 40px 0;">
+                        <h3 style="text-align: center; color: var(--oracle-red); margin-bottom: 25px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">compare</i>
+                            So sánh Physical vs Logical Migration
+                        </h3>
+                        <div class="grid-2">
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <h4 style="color: var(--oracle-red); margin-bottom: 15px; display: flex; align-items: center;">
+                                    <i class="material-icons" style="margin-right: 10px;">storage</i>
+                                    Physical Migration
+                                </h4>
+                                <div style="margin-bottom: 15px;">
+                                    <strong>Ưu điểm:</strong>
+                                    <ul style="margin-top: 8px; padding-left: 20px;">
+                                        <li>Tốc độ nhanh cho large databases</li>
+                                        <li>Giữ nguyên toàn bộ cấu trúc database</li>
+                                        <li>Không cần conversion đối tượng</li>
+                                    </ul>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <strong>Nhược điểm:</strong>
+                                    <ul style="margin-top: 8px; padding-left: 20px;">
+                                        <li>Yêu cầu cùng platform/version</li>
+                                        <li>Không thể filter dữ liệu</li>
+                                        <li>Không thể transform schema</li>
+                                    </ul>
+                                </div>
+                                <div style="background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                                    <strong>Phương pháp:</strong> Data Guard, Remote Cloning, Unplug/Plug
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <h4 style="color: var(--oracle-red); margin-bottom: 15px; display: flex; align-items: center;">
+                                    <i class="material-icons" style="margin-right: 10px;">schema</i>
+                                    Logical Migration
+                                </h4>
+                                <div style="margin-bottom: 15px;">
+                                    <strong>Ưu điểm:</strong>
+                                    <ul style="margin-top: 8px; padding-left: 20px;">
+                                        <li>Cho phép filter và transform dữ liệu</li>
+                                        <li>Cross-platform và cross-version</li>
+                                        <li>Phù hợp cho Autonomous Database</li>
+                                    </ul>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <strong>Nhược điểm:</strong>
+                                    <ul style="margin-top: 8px; padding-left: 20px;">
+                                        <li>Chậm hơn cho large datasets</li>
+                                        <li>Cần kiểm tra compatibility</li>
+                                        <li>Phức tạp hơn trong setup</li>
+                                    </ul>
+                                </div>
+                                <div style="background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                                    <strong>Phương pháp:</strong> Data Pump, GoldenGate, SQL Developer
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                                     </div>
                                     <h3 class="card-title">Các loại database được hỗ trợ</h3>
                                 </div>
@@ -1949,6 +2054,182 @@
     </section>
 
     <!-- Summary Section -->
+    <section id="summary" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">summarize</i>
+                    <h2>Tổng kết Migration trong Oracle Cloud Infrastructure</h2>
+                </div>
+                <div class="section-content">
+                    <div style="background: var(--oracle-light); padding: 40px; border-radius: 20px; margin-bottom: 40px; text-align: center;">
+                        <h3 style="color: var(--oracle-red); margin-bottom: 20px; font-size: 2rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 15px; font-size: 2.5rem;">cloud_upload</i>
+                            Migration Journey trong OCI
+                        </h3>
+                        <p style="font-size: 1.3rem; line-height: 1.6; max-width: 900px; margin: 0 auto;">
+                            Oracle Cloud Infrastructure cung cấp <span class="highlight">giải pháp migration toàn diện</span> cho mọi loại workload, từ infrastructure đến application và database. Mỗi phương pháp đều được thiết kế để <span class="highlight">giảm thiểu downtime</span> và <span class="highlight">tối ưu hóa hiệu suất</span>.
+                        </p>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">assessment</i>
+                                    </div>
+                                    <h3 class="card-title">Key Takeaways</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Block Volume Migration</span> - Cross-region replication có RTO thấp, cần activate replica</li>
+                                        <li><span class="highlight">HCX cho VMware</span> - Nhiều phương pháp từ zero-downtime đến bulk migration</li>
+                                        <li><span class="highlight">OKE Migration</span> - Foundation là giai đoạn quan trọng nhất</li>
+                                        <li><span class="highlight">ZDM cho Database</span> - Automation với nhiều phương pháp physical và logical</li>
+                                        <li><span class="highlight">OCM Service</span> - Tự động discovery và assessment</li>
+                                        <li><span class="highlight">Networking</span> - BYOIP, FastConnect và Security Lists</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">tips_and_updates</i>
+                                    </div>
+                                    <h3 class="card-title">Best Practices</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Lựa chọn phương pháp</span> phù hợp với yêu cầu downtime</li>
+                                        <li><span class="highlight">Sử dụng automation tools</span> để giảm rủi ro và lỗi</li>
+                                        <li><span class="highlight">Planning kỹ lưỡng</span> trước khi thực hiện migration</li>
+                                        <li><span class="highlight">Testing và validation</span> ở mọi giai đoạn</li>
+                                        <li><span class="highlight">Monitoring</span> liên tục trong quá trình migration</li>
+                                        <li><span class="highlight">Backup và rollback plan</span> cho mọi scenario</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">trending_up</i>
+                                    </div>
+                                    <h3 class="card-title">Lợi ích của OCI Migration</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="grid-2">
+                                        <div style="text-align: center; padding: 20px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                                <i class="material-icons" style="font-size: 1.8rem;">speed</i>
+                                            </div>
+                                            <h4>Hiệu suất cao</h4>
+                                            <p style="color: var(--text-secondary); margin-top: 8px;">Tối ưu hóa performance và tốc độ xử lý</p>
+                                        </div>
+                                        <div style="text-align: center; padding: 20px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                                <i class="material-icons" style="font-size: 1.8rem;">savings</i>
+                                            </div>
+                                            <h4>Tối ưu chi phí</h4>
+                                            <p style="color: var(--text-secondary); margin-top: 8px;">Giảm chi phí vận hành và quản lý</p>
+                                        </div>
+                                        <div style="text-align: center; padding: 20px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                                <i class="material-icons" style="font-size: 1.8rem;">security</i>
+                                            </div>
+                                            <h4>Bảo mật tốt nhất</h4>
+                                            <p style="color: var(--text-secondary); margin-top: 8px;">Enterprise-grade security và compliance</p>
+                                        </div>
+                                        <div style="text-align: center; padding: 20px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                                <i class="material-icons" style="font-size: 1.8rem;">auto_fix_high</i>
+                                            </div>
+                                            <h4>Tự động hóa</h4>
+                                            <p style="color: var(--text-secondary); margin-top: 8px;">Giảm thiểu thời gian quản lý thủ công</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">rocket_launch</i>
+                                    </div>
+                                    <h3 class="card-title">Next Steps</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="workflow-container" style="margin: 20px 0;">
+                                        <div class="workflow-step">
+                                            <div class="step-number">1</div>
+                                            <div class="step-title">Assessment</div>
+                                            <div class="step-desc">Đánh giá hạ tầng hiện tại</div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">2</div>
+                                            <div class="step-title">Planning</div>
+                                            <div class="step-desc">Lên kế hoạch migration</div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">3</div>
+                                            <div class="step-title">Pilot</div>
+                                            <div class="step-desc">Thử nghiệm với workload nhỏ</div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">4</div>
+                                            <div class="step-title">Migration</div>
+                                            <div class="step-desc">Thực hiện full migration</div>
+                                        </div>
+                                        <div class="workflow-step">
+                                            <div class="step-number">5</div>
+                                            <div class="step-title">Optimize</div>
+                                            <div class="step-desc">Tối ưu cloud environment</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Final Thank You Section -->
+                    <div style="background: linear-gradient(135deg, var(--oracle-red) 0%, #d60000 100%); color: white; padding: 50px; border-radius: 20px; text-align: center; margin-top: 50px;">
+                        <h3 style="font-size: 2.5rem; margin-bottom: 20px; font-weight: 700;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 15px; font-size: 3rem;">cloud</i>
+                            Cảm ơn!
+                        </h3>
+                        <p style="font-size: 1.3rem; line-height: 1.6; margin-bottom: 20px;">
+                            Cảm ơn bạn đã theo dõi tổng quan về Migration trong Oracle Cloud Infrastructure
+                        </p>
+                        <p style="font-size: 1.1rem; opacity: 0.9;">
+                            <strong>Nguyễn Ngọc Khánh - DBA VNPT IT</strong><br>
+                            Oracle Cloud Infrastructure Migration Expert
+                        </p>
+                        <div style="margin-top: 30px; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="material-icons">email</i>
+                                <span>khanh.nguyen@vnpt.vn</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="material-icons">business</i>
+                                <span>VNPT IT - Oracle Cloud Team</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
     <section id="summary" class="section">
         <div class="section-container">
             <div class="content-section">
