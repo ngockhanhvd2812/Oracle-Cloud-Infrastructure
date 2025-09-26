@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng quan về Migration trong Oracle Cloud Infrastructure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --oracle-red: #F80000;
+            --oracle-dark: #1e1e1e;
+            --oracle-light: #f5f5f5;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 12px rgba(0,0,0,0.15);
+            --shadow-heavy: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(248, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 15px 0;
+            transform: translateY(-100%);
+            animation: slideDown 0.8s ease-out 0.5s forwards;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .nav-logo .material-icons {
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-link .material-icons {
+            font-size: 18px;
+        }
+
+        /* Section Styling */
+        .section {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 100px 20px 50px;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .section.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(248, 0, 0, 0.9) 0%, rgba(180, 0, 0, 0.9) 100%),
+                        url('https://sfile.chatglm.cn/images-ppt/3c5b44c055ba.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s ease-out 1s forwards;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s ease-out 1.3s forwards;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: var(--oracle-red);
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s ease-out 1.6s forwards;
+            transition: all 0.3s ease;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-medium);
+            margin: 20px 0;
+            overflow: hidden;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+
+        .content-section.animate {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--oracle-red) 0%, #d60000 100%);
+            color: white;
+            padding: 30px 50px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .section-header:hover::before {
+            left: 100%;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-left: 15px;
+        }
+
+        .section-header .material-icons {
+            font-size: 3rem;
+        }
+
+        .section-content {
+            padding: 40px 50px;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow-light);
+            border-left: 4px solid var(--oracle-red);
+            transition: all 0.3s ease;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        .card.animate {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            background: var(--oracle-red);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: rotate(360deg);
+        }
+
+        .card-icon .material-icons {
+            font-size: 24px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-content {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .card-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .card-content li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 8px;
+        }
+
+        .card-content li::before {
+            content: "•";
+            color: var(--oracle-red);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Highlight Text */
+        .highlight {
+            font-weight: 600;
+            color: var(--oracle-red);
+            position: relative;
+        }
+
+        .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--oracle-red);
+            transition: width 0.3s ease;
+        }
+
+        .highlight:hover::after {
+            width: 100%;
+        }
+
+        /* Table of Contents */
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .toc-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            transform: translateX(-50px);
+            opacity: 0;
+        }
+
+        .toc-item.animate {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toc-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .toc-number {
+            background: linear-gradient(135deg, var(--oracle-red) 0%, #d60000 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .toc-text {
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        .toc-text strong {
+            color: var(--oracle-red);
+            font-weight: 600;
+        }
+
+        /* Workflow Steps */
+        .workflow-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .workflow-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--oracle-red) 0%, #ff6b6b  100%);
+            z-index: 1;
+        }
+
+        .workflow-step {
+            width: 18%;
+            background: white;
+            border-radius: 15px;
+            padding: 25px 15px;
+            text-align: center;
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        .workflow-step.animate {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .workflow-step:hover {
+            transform: translateY(-10px);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, var(--oracle-red) 0%, #d60000 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 auto 15px;
+        }
+
+        .step-icon {
+            color: var(--oracle-red);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .step-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Image Containers */
+        .image-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow-medium);
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Footer */
+        .section-footer {
+            background: var(--oracle-light);
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-logo .material-icons {
+            color: var(--oracle-red);
+            margin-right: 8px;
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--oracle-red) 0%, #ff6b6b 100%);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .section-content {
+                padding: 30px 25px;
+            }
+
+            .workflow-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .workflow-step {
+                width: 100%;
+            }
+
+            .workflow-container::before {
+                display: none;
+            }
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--oracle-red);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator" id="progressIndicator"></div>
+
+    <!-- Navigation -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="material-icons">cloud</i>
+                Oracle Cloud Infrastructure
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#hero" class="nav-link">
+                        <i class="material-icons">home</i>
+                        Trang chủ
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#toc" class="nav-link">
+                        <i class="material-icons">menu_book</i>
+                        Mục lục
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#introduction" class="nav-link">
+                        <i class="material-icons">info</i>
+                        Giới thiệu
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#methods" class="nav-link">
+                        <i class="material-icons">category</i>
+                        Phương pháp
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#summary" class="nav-link">
+                        <i class="material-icons">summarize</i>
+                        Tổng kết
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="section hero-section active">
+        <div class="floating-elements">
+            <i class="material-icons floating-element" style="font-size: 4rem;">cloud</i>
+            <i class="material-icons floating-element" style="font-size: 3rem;">storage</i>
+            <i class="material-icons floating-element" style="font-size: 3.5rem;">sync</i>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title">Tổng quan về Migration trong Oracle Cloud Infrastructure</h1>
+            <p class="hero-subtitle">Nguyễn Ngọc Khánh - DBA VNPT IT</p>
+            <a href="#toc" class="hero-cta">
+                <i class="material-icons">rocket_launch</i>
+                Bắt đầu khám phá
+            </a>
+        </div>
+    </section>
+
+    <!-- Table of Contents Section -->
+    <section id="toc" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">menu_book</i>
+                    <h2>Mục lục</h2>
+                </div>
+                <div class="section-content">
+                    <div class="toc-grid">
+                        <div class="toc-item" onclick="scrollToSection('block-volume')">
+                            <div class="toc-number">1</div>
+                            <div class="toc-text"><strong>Block Volume Migration</strong> - Copy to another region, Cross-region replication</div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('hcx-ocvs')">
+                            <div class="toc-number">2</div>
+                            <div class="toc-text"><strong>Hybrid Cloud Extension (HCX)</strong> và <strong>Oracle Cloud VMware Solution (OCVS)</strong></div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('oke')">
+                            <div class="toc-number">3</div>
+                            <div class="toc-text"><strong>OCI Container Engine for Kubernetes (OKE)</strong> - Các giai đoạn Migration, Load Balancer</div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('database-migration')">
+                            <div class="toc-number">4</div>
+                            <div class="toc-text"><strong>OCI Database Migration service</strong> và <strong>Zero Downtime Migration (ZDM)</strong></div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('ocm')">
+                            <div class="toc-number">5</div>
+                            <div class="toc-text"><strong>Oracle Cloud Migrations (OCM) service</strong> - Inventory Asset, Quy trình Migration</div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('networking')">
+                            <div class="toc-number">6</div>
+                            <div class="toc-text"><strong>Networking và Security trong OCI</strong> - BYOIP, FastConnect, Security Lists</div>
+                        </div>
+                        <div class="toc-item" onclick="scrollToSection('best-practices')">
+                            <div class="toc-number">7</div>
+                            <div class="toc-text"><strong>Best Practices và Case Study</strong> - Thách thức và Giải pháp Migration</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methods Section -->
+    <section id="methods" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">category</i>
+                    <h2>Phân loại các phương pháp Migration trong OCI</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">schedule</i>
+                                </div>
+                                <h3 class="card-title">Theo thời gian downtime</h3>
+                            </div>
+                            <div class="card-content">
+                                <div style="display: flex; justify-content: space-between; gap: 20px;">
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Online Migration</h4>
+                                        <p>Zero Downtime, dịch vụ không gian đoạn</p>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Offline Migration</h4>
+                                        <p>Có downtime, thường trong khoảng thời gian thấp điểm</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">storage</i>
+                                </div>
+                                <h3 class="card-title">Theo loại dữ liệu</h3>
+                            </div>
+                            <div class="card-content">
+                                <div style="display: flex; justify-content: space-between; gap: 20px;">
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Physical Migration</h4>
+                                        <p>Di chuyển toàn bộ dữ liệu vật lý, giữ nguyên cấu trúc</p>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Logical Migration</h4>
+                                        <p>Di chuyển dữ liệu logic, có thể lọc và chuyển đổi</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">settings</i>
+                                </div>
+                                <h3 class="card-title">Theo mức độ tự động hóa</h3>
+                            </div>
+                            <div class="card-content">
+                                <div style="display: flex; justify-content: space-between; gap: 20px;">
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Manual Migration</h4>
+                                        <p>Thực hiện thủ công, tốn nhiều công sức và thời gian</p>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Automated Migration</h4>
+                                        <p>Tự động hóa bằng công cụ, giảm thiểu sai sót</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">compare_arrows</i>
+                                </div>
+                                <h3 class="card-title">Theo phạm vi</h3>
+                            </div>
+                            <div class="card-content">
+                                <div style="display: flex; justify-content: space-between; gap: 20px;">
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Lift and Shift</h4>
+                                        <p>Di chuyển nguyên vẹn mà không thay đổi cấu trúc</p>
+                                    </div>
+                                    <div style="flex: 1; text-align: center;">
+                                        <h4 style="color: var(--oracle-red); margin-bottom: 8px;">Replatform/Refactor</h4>
+                                        <p>Tối ưu hóa hoặc thiết kế lại ứng dụng cho cloud</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--oracle-light); border-radius: 15px; padding: 30px; margin: 40px 0;">
+                        <h3 style="text-align: center; color: var(--oracle-red); margin-bottom: 25px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">timeline</i>
+                            Tổng quan các phương pháp Migration trong OCI
+                        </h3>
+                        <div class="grid-4">
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="background: var(--oracle-red); color: white; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                    <i class="material-icons" style="font-size: 2rem;">storage</i>
+                                </div>
+                                <h4 style="margin-bottom: 8px;">Block Volume</h4>
+                                <p style="color: var(--text-secondary);">Copy, Replication</p>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="background: var(--oracle-red); color: white; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                    <i class="material-icons" style="font-size: 2rem;">computer</i>
+                                </div>
+                                <h4 style="margin-bottom: 8px;">VM Migration</h4>
+                                <p style="color: var(--text-secondary);">HCX, OCM</p>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="background: var(--oracle-red); color: white; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                    <i class="material-icons" style="font-size: 2rem;">dns</i>
+                                </div>
+                                <h4 style="margin-bottom: 8px;">Database</h4>
+                                <p style="color: var(--text-secondary);">ZDM, Data Pump</p>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <div style="background: var(--oracle-red); color: white; width: 70px; height: 70px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;">
+                                    <i class="material-icons" style="font-size: 2rem;">view_in_ar</i>
+                                </div>
+                                <h4 style="margin-bottom: 8px;">Container</h4>
+                                <p style="color: var(--text-secondary);">OKE, OCIR</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Block Volume Migration Section -->
+    <section id="block-volume" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">storage</i>
+                    <h2>Block Volume Migration</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">Định nghĩa</h3>
+                                </div>
+                                <div class="card-content">
+                                    <span class="highlight">Block Volume</span> trong OCI là dịch vụ lưu trữ block hiệu suất cao, có thể gắn vào các compute instance như một ổ cứng.
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">sync</i>
+                                    </div>
+                                    <h3 class="card-title">Copy to another region</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li>Sao chép <span class="highlight">Block Volume backup</span> từ source region sang target region</li>
+                                        <li>Quá trình chuyển đổi <span class="highlight">asynchronous</span>, không real-time</li>
+                                        <li>Khôi phục backup thành volume mới tại target region</li>
+                                        <li>Phù hợp cho <span class="highlight">disaster recovery</span> và migration scenarios</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">sync_alt</i>
+                                    </div>
+                                    <h3 class="card-title">Cross-region replication</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Cross-region replication</span> cho phép sao chép liên tục dữ liệu</li>
+                                        <li>Volume replica tại target region ở trạng thái <span class="highlight">không sử dụng được</span></li>
+                                        <li>Cần <span class="highlight">Activate the replica</span> để tạo volume mới sử dụng được</li>
+                                        <li><span class="highlight">RTO thấp</span> - khôi phục nhanh khi sự cố</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">help_outline</i>
+                                    </div>
+                                    <h3 class="card-title">Cross-region replication Q&A</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 15px;">
+                                        <strong style="color: var(--oracle-red);">Câu hỏi:</strong> Khi sử dụng cross-region replication, cần làm gì để tạo volume mới từ replica?
+                                    </div>
+                                    <div style="margin-left: 20px;">
+                                        <div style="margin-bottom: 8px;"><strong>A.</strong> Không cần hành động, replica mặc định có sẵn <span style="color: #C62828; font-weight: 600;">(Sai)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>B.</strong> Khởi tạo replica <span style="color: #C62828; font-weight: 600;">(Sai)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>C.</strong> Kích hoạt replica <span style="color: #2E7D32; font-weight: 600;">(Đúng)</span></div>
+                                        <div style="margin-bottom: 8px;"><strong>D.</strong> Trigger the replica <span style="color: #C62828; font-weight: 600;">(Sai)</span></div>
+                                    </div>
+                                    <div style="margin-top: 15px; padding: 10px; background: #e8f5e8; border-radius: 8px;">
+                                        <strong>Giải thích:</strong> Replica cần được <span class="highlight">Activate the replica</span> để tạo volume mới sử dụng được.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">stars</i>
+                                    </div>
+                                    <h3 class="card-title">Lợi ích</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Disaster Recovery</span> - Sao lưu dữ liệu giữa các region</li>
+                                        <li><span class="highlight">Migration</span> - Di chuyển dữ liệu với downtime tối thiểu</li>
+                                        <li><span class="highlight">Khả năng mở rộng</span> - Triển khai ứng dụng đa region</li>
+                                        <li><span class="highlight">Tự động hóa</span> - Thiết lập một lần, tự động sao chép</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <div style="width: 100%; height: 300px; background: linear-gradient(135deg, #f5f5f5 0%, #eee 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; color: var(--oracle-red); font-size: 3rem;">
+                                    <i class="material-icons" style="font-size: 4rem;">storage</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OKE Introduction Section -->
+    <section id="oke" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">view_in_ar</i>
+                    <h2>OCI Container Engine for Kubernetes (OKE) - Giới thiệu</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">Định nghĩa</h3>
+                                </div>
+                                <div class="card-content">
+                                    <span class="highlight">OKE</span> là dịch vụ Kubernetes được quản lý hoàn toàn trên Oracle Cloud Infrastructure, giúp triển khai, quản lý và mở rộng các ứng dụng containerized.
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">architecture</i>
+                                    </div>
+                                    <h3 class="card-title">Kiến trúc và thành phần chính</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Control Plane</span> - Quản lý bởi Oracle, không cần vận hành</li>
+                                        <li><span class="highlight">Worker Nodes</span> - Compute instances chạy container workloads</li>
+                                        <li><span class="highlight">Virtual Nodes</span> - Serverless option cho worker nodes</li>
+                                        <li><span class="highlight">Container Network</span> - Mạng riêng cho cluster</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">stars</i>
+                                    </div>
+                                    <h3 class="card-title">Lợi ích khi sử dụng OKE</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="grid-2">
+                                        <div style="text-align: center; padding: 15px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px;">
+                                                <i class="material-icons">auto_fix_high</i>
+                                            </div>
+                                            <strong>Tự động hóa quản lý</strong>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px;">
+                                                <i class="material-icons">security</i>
+                                            </div>
+                                            <strong>Bảo mật tích hợp</strong>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px;">
+                                                <i class="material-icons">sync</i>
+                                            </div>
+                                            <strong>Tự động scaling</strong>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px;">
+                                            <div style="background: var(--oracle-red); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 10px;">
+                                                <i class="material-icons">update</i>
+                                            </div>
+                                            <strong>Tự động upgrades</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <img src="https://sfile.chatglm.cn/images-ppt/897c04e29be5.png" alt="OCI Container Engine for Kubernetes Architecture">
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">compare</i>
+                                    </div>
+                                    <h3 class="card-title">So sánh OKE và OCI Registry (OCIR)</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">A.</strong> Khi cần lưu trữ, chia sẻ và quản lý container images
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải OKE - Đây là chức năng của OCI Registry (OCIR)</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">B.</strong> Khi cần dịch vụ Kubernetes được quản lý tự động
+                                        <div style="margin-left: 20px; color: #2E7D32; font-weight: 600;">✓ Là OKE - OKE cung cấp Kubernetes cluster được quản lý hoàn toàn</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">C.</strong> Khi cần nền tảng với khả năng serverless
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải OKE - Đây là chức năng của OCI Functions</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">D.</strong> Khi cần private container registry
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải OKE - Đây là chức năng của OCI Registry (OCIR)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OKE Migration Phases Section -->
+    <section id="oke-migration" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">timeline</i>
+                    <h2>OKE - Các giai đoạn Migration</h2>
+                </div>
+                <div class="section-content">
+                    <div style="background: var(--oracle-light); padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center;">
+                        <h3 style="color: var(--oracle-red); margin-bottom: 15px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">info</i>
+                            Tổng quan quy trình Migration
+                        </h3>
+                        <p style="font-size: 1.2rem; line-height: 1.6;">
+                            Quy trình Migration đến <span class="highlight">OCI Container Engine for Kubernetes (OKE)</span> bao gồm nhiều giai đoạn, trong đó việc thiết lập nền tảng (foundation) là bước quan trọng đầu tiên.
+                        </p>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">check_circle</i>
+                                    </div>
+                                    <h3 class="card-title">Planning and establishing a foundation</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p>Đây là giai đoạn <span class="highlight">quan trọng nhất</span> khi migration đến OKE:</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li>Thiết lập <span class="highlight">IAM policies và roles</span></li>
+                                        <li>Cấu hình <span class="highlight">billing và budgets</span></li>
+                                        <li>Thiết lập <span class="highlight">network connectivity</span></li>
+                                        <li>Cấu hình <span class="highlight">OKE cluster security</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f1f1f1; border-radius: 15px; padding: 25px; margin-top: 20px;">
+                                <h4 style="color: var(--oracle-red); margin-bottom: 15px; display: flex; align-items: center;">
+                                    <i class="material-icons" style="margin-right: 10px;">build</i>
+                                    Các hoạt động chính trong giai đoạn foundation
+                                </h4>
+                                <div class="grid-2">
+                                    <div style="background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="material-icons" style="color: var(--oracle-red); margin-right: 12px;">admin_panel_settings</i>
+                                        <strong>Cấu hình IAM policies</strong>
+                                    </div>
+                                    <div style="background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="material-icons" style="color: var(--oracle-red); margin-right: 12px;">account_balance_wallet</i>
+                                        <strong>Thiết lập billing</strong>
+                                    </div>
+                                    <div style="background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="material-icons" style="color: var(--oracle-red); margin-right: 12px;">router</i>
+                                        <strong>Cấu hình network</strong>
+                                    </div>
+                                    <div style="background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; margin-bottom: 10px;">
+                                        <i class="material-icons" style="color: var(--oracle-red); margin-right: 12px;">security</i>
+                                        <strong>Bảo mật cluster</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <img src="https://sfile.chatglm.cn/images-ppt/897c04e29be5.png" alt="OKE Migration Phases">
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">quiz</i>
+                                    </div>
+                                    <h3 class="card-title">Xác định giai đoạn cấu hình nền tảng</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">A.</strong> Evaluating and identifying workloads
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải - Giai đoạn phân tích ứng dụng</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">B.</strong> Planning and establishing a foundation
+                                        <div style="margin-left: 20px; color: #2E7D32; font-weight: 600;">✓ Đúng - Giai đoạn chuẩn bị môi trường cloud</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">C.</strong> Optimizing the environment
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải - Giai đoạn tối ưu sau khi workload đã chạy</div>
+                                    </div>
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="color: var(--oracle-red);">D.</strong> Implementing workloads
+                                        <div style="margin-left: 20px; color: #C62828; font-weight: 600;">✗ Không phải - Giai đoẢn triển khai ứng dụng</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="hcx-ocvs" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">sync</i>
+                    <h2>Hybrid Cloud Extension (HCX) và OCVS</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">HCX - Giới thiệu</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">Hybrid Cloud Extension (HCX)</span> là giải pháp di chuyển máy ảo (VM) từ môi trường on-premises sang Oracle Cloud VMware Solution (OCVS) một cách liền mạch.</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">HCX Manager</span> - Trung tâm quản lý và điều phối</li>
+                                        <li><span class="highlight">HCX Connector</span> - Kết nối giữa on-premises và cloud</li>
+                                        <li><span class="highlight">HCX Interconnect</span> - Tạo kết nối mạng an toàn</li>
+                                        <li><span class="highlight">HCX WAN Optimization</span> - Tối ưu hóa truyền dữ liệu</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">compare_arrows</i>
+                                    </div>
+                                    <h3 class="card-title">Các phương pháp Migration</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">HCX vMotion</span> - Zero downtime cho business-critical VMs</li>
+                                        <li><span class="highlight">HCX Bulk Migration</span> - Minimal downtime cho non-critical VMs</li>
+                                        <li><span class="highlight">HCX Cold Migration</span> - High downtime cho dev/test VMs</li>
+                                        <li><span class="highlight">HCX Replication Assisted vMotion (RAV)</span> - Near-zero downtime cho large-scale</li>
+                                        <li><span class="highlight">HCX OS Assisted Migration (OSAM)</span> - Chọ KVM workloads</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">devices_other</i>
+                                    </div>
+                                    <h3 class="card-title">KVM workloads với OSAM</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p>HCX OS Assisted Migration (OSAM) cho phép migrate KVM workloads sang OCVS:</p>
+                                    <ul style="margin-top: 10px;">
+                                        <li>Chạy trên <span class="highlight">non-VMware</span> platform</li>
+                                        <li>Cần <span class="highlight">validation</span> trước cutover</li>
+                                        <li>Yêu cầu <span class="highlight">minimal downtime</span></li>
+                                        <li><span class="highlight">Không migrate</span> VMs vào OCVS qua OCM</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">cloud_queue</i>
+                                    </div>
+                                    <h3 class="card-title">Oracle Cloud VMware Solution (OCVS)</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">OCVS</span> là dịch vụ cho phép triển khai môi trường VMware SDDC trên OCI:</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">vSphere</span> - Ảo hóa và quản lý máy ảo</li>
+                                        <li><span class="highlight">vSAN</span> - Lưu trữ định nghĩa bằng phần mềm</li>
+                                        <li><span class="highlight">NSX-T</span> - Mạng và bảo mật định nghĩa bằng phần mềm</li>
+                                        <li><span class="highlight">HCX</span> - Mở rộng hybrid cloud và di chuyển workload</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">category</i>
+                                    </div>
+                                    <h3 class="card-title">Migration cho các loại workload</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600;">Business-critical VMs</div>
+                                            <div style="font-size: 0.9rem; margin-top: 5px;">HCX vMotion</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600;">Dev-test VMs</div>
+                                            <div style="font-size: 0.9rem; margin-top: 5px;">Cold/Bulk Migration</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600;">Large-scale workloads</div>
+                                            <div style="font-size: 0.9rem; margin-top: 5px;">HCX RAV</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600;">KVM workloads</div>
+                                            <div style="font-size: 0.9rem; margin-top: 5px;">HCX OSAM</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">stars</i>
+                                    </div>
+                                    <h3 class="card-title">Lợi ích của HCX</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li>Sử dụng <span class="highlight">WAN optimization</span> tăng tốc migration traffic</li>
+                                        <li>VMs đã di chuyển có thể <span class="highlight">giữ nguyên địa chỉ IP</span></li>
+                                        <li>Hỗ trợ migration của <span class="highlight">VMs từ môi trường VMware</span></li>
+                                        <li>Không tự động nâng cấp source environment</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bảng so sánh các phương pháp Migration -->
+                    <div style="background: var(--oracle-light); border-radius: 15px; padding: 30px; margin: 40px 0;">
+                        <h3 style="text-align: center; color: var(--oracle-red); margin-bottom: 25px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">table_chart</i>
+                            Bảng so sánh các phương pháp Migration HCX
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <thead>
+                                    <tr style="background: var(--oracle-red); color: white;">
+                                        <th style="padding: 15px; text-align: left;">Phương pháp</th>
+                                        <th style="padding: 15px; text-align: left;">Downtime</th>
+                                        <th style="padding: 15px; text-align: left;">Phù hợp cho</th>
+                                        <th style="padding: 15px; text-align: left;">Quy mô</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">HCX vMotion</td>
+                                        <td style="padding: 12px 15px;">Zero downtime</td>
+                                        <td style="padding: 12px 15px;">Business-critical VMs</td>
+                                        <td style="padding: 12px 15px;">Small scale</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">HCX Bulk Migration</td>
+                                        <td style="padding: 12px 15px;">Minimal downtime</td>
+                                        <td style="padding: 12px 15px;">Non-critical VMs</td>
+                                        <td style="padding: 12px 15px;">Large scale</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">HCX Cold Migration</td>
+                                        <td style="padding: 12px 15px;">High downtime</td>
+                                        <td style="padding: 12px 15px;">Dev/test VMs</td>
+                                        <td style="padding: 12px 15px;">Any scale</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">HCX RAV</td>
+                                        <td style="padding: 12px 15px;">Near-zero downtime</td>
+                                        <td style="padding: 12px 15px;">Large-scale critical</td>
+                                        <td style="padding: 12px 15px;">Very large scale</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 15px; font-weight: 600;">HCX OSAM</td>
+                                        <td style="padding: 12px 15px;">Minimal downtime</td>
+                                        <td style="padding: 12px 15px;">KVM workloads</td>
+                                        <td style="padding: 12px 15px;">Medium scale</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Database Migration Section -->
+    <section id="database-migration" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">storage</i>
+                    <h2>OCI Database Migration service và Zero Downtime Migration (ZDM)</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">OCI Database Migration Service</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">OCI Database Migration service</span> là dịch vụ được quản lý hoàn toàn giúp di chuyển databases từ on-premises hoặc các cloud khác sang Oracle Cloud Infrastructure.</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">Migration Console</span> - Giao diện quản lý tập trung</li>
+                                        <li><span class="highlight">Migration Agent</span> - Cài đặt tại source database</li>
+                                        <li><span class="highlight">Data Transfer Medium</span> - Object Storage, File Storage, Database Link</li>
+                                        <li><span class="highlight">Target Database</span> - OCI Database, Autonomous Database</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">swap_horiz</i>
+                                    </div>
+                                    <h3 class="card-title">Các phương pháp Transfer</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;">
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600; margin-bottom: 8px;">Data Pump via Object Storage</div>
+                                            <p style="font-size: 0.9rem;">Sử dụng Object Storage làm staging medium - phương pháp phổ biến nhất, hỗ trợ AWS RDS</p>
+                                        </div>
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600; margin-bottom: 8px;">Data Pump via File Storage</div>
+                                            <p style="font-size: 0.9rem;">Sử dụng NFS File Storage làm trung gian - phù hợp cho môi trường có kết nối NFS</p>
+                                        </div>
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600; margin-bottom: 8px;">Data Pump via Database Link</div>
+                                            <p style="font-size: 0.9rem;">Kết nối trực tiếp qua SQL*Net - phù hợp cho Standard Edition sources</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">dns</i>
+                                    </div>
+                                    <h3 class="card-title">Các loại database được hỗ trợ</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">Oracle Database</div>
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">Microsoft SQL Server</div>
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">PostgreSQL</div>
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">MySQL</div>
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">MongoDB</div>
+                                        <div style="background: var(--oracle-red); color: white; border-radius: 20px; padding: 6px 12px; font-size: 16px; font-weight: 600;">Autonomous Database</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">sync</i>
+                                    </div>
+                                    <h3 class="card-title">Oracle Zero Downtime Migration (ZDM)</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">ZDM</span> là công cụ migration của Oracle giúp di chuyển databases từ on-premises hoặc cloud khác sang Oracle Cloud với minimal hoặc zero downtime.</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">ZDM Service Host</span> - Quản lý toàn bộ quy trình migration</li>
+                                        <li><span class="highlight">ZDM Agent</span> - Cài đặt tại source và target database</li>
+                                        <li><span class="highlight">Data Transfer Components</span> - Data Pump, GoldenGate, Data Guard</li>
+                                        <li><span class="highlight">ZDM Repository</span> - Lưu trữ metadata và trạng thái migration</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">category</i>
+                                    </div>
+                                    <h3 class="card-title">Các phương pháp ZDM Migration</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px; text-align: center;">
+                                            <i class="material-icons" style="color: var(--oracle-red); font-size: 28px; margin-bottom: 10px;">power_off</i>
+                                            <div style="font-weight: 600;">Offline Migration</div>
+                                        </div>
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px; text-align: center;">
+                                            <i class="material-icons" style="color: var(--oracle-red); font-size: 28px; margin-bottom: 10px;">play_circle</i>
+                                            <div style="font-weight: 600;">Online Migration</div>
+                                        </div>
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px; text-align: center;">
+                                            <i class="material-icons" style="color: var(--oracle-red); font-size: 28px; margin-bottom: 10px;">storage</i>
+                                            <div style="font-weight: 600;">Physical Migration</div>
+                                        </div>
+                                        <div style="background: #f5f5f5; border-radius: 8px; padding: 15px; text-align: center;">
+                                            <i class="material-icons" style="color: var(--oracle-red); font-size: 28px; margin-bottom: 10px;">schema</i>
+                                            <div style="font-weight: 600;">Logical Migration</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">cloud_done</i>
+                                    </div>
+                                    <h3 class="card-title">Migration đến Autonomous Database</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p><span class="highlight">Autonomous Database</span> (ADB) là dịch vụ database tự quản lý, tự bảo mật và tự sửa lỗi trên Oracle Cloud.</p>
+                                    <ul style="margin-top: 15px;">
+                                        <li><span class="highlight">OCI Database Migration Service</span> sử dụng ZDM engine với GoldenGate</li>
+                                        <li>Hỗ trợ <span class="highlight">online (continuous) migration</span> đến ATP hoặc ADW</li>
+                                        <li><span class="highlight">Data Pump</span> thực hiện initial load</li>
+                                        <li><span class="highlight">GoldenGate</span> xử lý change data capture</li>
+                                        <li><span class="highlight">Free GoldenGate license</span> (183 days)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed ZDM Methods Comparison -->
+                    <div style="background: var(--oracle-light); border-radius: 15px; padding: 30px; margin: 40px 0;">
+                        <h3 style="text-align: center; color: var(--oracle-red); margin-bottom: 25px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">compare</i>
+                            So sánh các phương pháp ZDM Migration
+                        </h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <thead>
+                                    <tr style="background: var(--oracle-red); color: white;">
+                                        <th style="padding: 15px; text-align: left;">Phương pháp</th>
+                                        <th style="padding: 15px; text-align: left;">Downtime</th>
+                                        <th style="padding: 15px; text-align: left;">Ưu điểm</th>
+                                        <th style="padding: 15px; text-align: left;">Phù hợp cho</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">Data Guard</td>
+                                        <td style="padding: 12px 15px;">Minimal</td>
+                                        <td style="padding: 12px 15px;">Bảo mật cao, toàn vẹn dữ liệu</td>
+                                        <td style="padding: 12px 15px;">Business-critical, cùng version</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">Remote Cloning</td>
+                                        <td style="padding: 12px 15px;">Cao</td>
+                                        <td style="padding: 12px 15px;">Di chuyển nhanh, đơn giản</td>
+                                        <td style="padding: 12px 15px;">Large databases, cùng platform</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">Unplug and Plug</td>
+                                        <td style="padding: 12px 15px;">Trung bình</td>
+                                        <td style="padding: 12px 15px;">Hỗ trợ upgrade, chuyển CDB</td>
+                                        <td style="padding: 12px 15px;">Upgrade, CDB environments</td>
+                                    </tr>
+                                    <tr style="background: #f9f9f9; border-bottom: 1px solid #eee;">
+                                        <td style="padding: 12px 15px; font-weight: 600;">Data Pump</td>
+                                        <td style="padding: 12px 15px;">Cao</td>
+                                        <td style="padding: 12px 15px;">Lọc dữ liệu, cross-platform</td>
+                                        <td style="padding: 12px 15px;">Autonomous DB, cross-version</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 15px; font-weight: 600;">GoldenGate</td>
+                                        <td style="padding: 12px 15px;">Zero</td>
+                                        <td style="padding: 12px 15px;">Continuous replication, zero downtime</td>
+                                        <td style="padding: 12px 15px;">24/7 systems, cross-platform</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+    <section id="oke" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">view_in_ar</i>
+                    <h2>OCI Container Engine for Kubernetes (OKE)</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">Các giai đoạn Migration</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="workflow-container" style="display: flex; justify-content: space-between; margin: 20px 0; position: relative;">
+                                        <div class="workflow-step" style="width: 23%; background: white; border-radius: 15px; padding: 15px; text-align: center; box-shadow: var(--shadow-medium); position: relative; z-index: 2;">
+                                            <div class="step-number" style="background: var(--oracle-red); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin: 0 auto 10px;">
+                                                1
+                                            </div>
+                                            <div class="step-title" style="font-weight: 600; margin-bottom: 8px;">Assessment</div>
+                                            <div class="step-desc" style="font-size: 0.8rem; color: var(--text-secondary);">Phân tích ứng dụng hiện tại</div>
+                                        </div>
+                                        <div class="workflow-step" style="width: 23%; background: white; border-radius: 15px; padding: 15px; text-align: center; box-shadow: var(--shadow-medium); position: relative; z-index: 2;">
+                                            <div class="step-number" style="background: var(--oracle-red); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin: 0 auto 10px;">
+                                                2
+                                            </div>
+                                            <div class="step-title" style="font-weight: 600; margin-bottom: 8px;">Containerization</div>
+                                            <div class="step-desc" style="font-size: 0.8rem; color: var(--text-secondary);">Chuyển đổi thành container</div>
+                                        </div>
+                                        <div class="workflow-step" style="width: 23%; background: white; border-radius: 15px; padding: 15px; text-align: center; box-shadow: var(--shadow-medium); position: relative; z-index: 2;">
+                                            <div class="step-number" style="background: var(--oracle-red); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin: 0 auto 10px;">
+                                                3
+                                            </div>
+                                            <div class="step-title" style="font-weight: 600; margin-bottom: 8px;">Deployment</div>
+                                            <div class="step-desc" style="font-size: 0.8rem; color: var(--text-secondary);">Triển khai lên OKE cluster</div>
+                                        </div>
+                                        <div class="workflow-step" style="width: 23%; background: white; border-radius: 15px; padding: 15px; text-align: center; box-shadow: var(--shadow-medium); position: relative; z-index: 2;">
+                                            <div class="step-number" style="background: var(--oracle-red); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin: 0 auto 10px;">
+                                                4
+                                            </div>
+                                            <div class="step-title" style="font-weight: 600; margin-bottom: 8px;">Testing</div>
+                                            <div class="step-desc" style="font-size: 0.8rem; color: var(--text-secondary);">Kiểm tra và điều chỉnh</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">balance</i>
+                                    </div>
+                                    <h3 class="card-title">Load Balancer và Ingress Controller</h3>
+                                </div>
+                                <div class="card-content">
+                                    <p>Trong <span class="highlight">OKE</span>, <span class="highlight">Load Balancer</span> và <span class="highlight">Ingress Controller</span> là các thành phần quan trọng giúp expose containerized applications ra bên ngoài cluster.</p>
+                                    
+                                    <div style="display: flex; gap: 15px; margin-top: 15px;">
+                                        <div style="flex: 1; background: #f5f5f5; border-radius: 8px; padding: 15px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600; margin-bottom: 8px;">Load Balancer</div>
+                                            <ul style="font-size: 0.9rem;">
+                                                <li>Route traffic ở <span class="highlight">L4</span> (TCP/UDP)</li>
+                                                <li>Tạo <span class="highlight">OCI Load Balancer</span> resource</li>
+                                                <li>Dành cho <span class="highlight">external access</span></li>
+                                            </ul>
+                                        </div>
+                                        <div style="flex: 1; background: #f5f5f5; border-radius: 8px; padding: 15px;">
+                                            <div style="color: var(--oracle-red); font-weight: 600; margin-bottom: 8px;">Ingress Controller</div>
+                                            <ul style="font-size: 0.9rem;">
+                                                <li>Route traffic ở <span class="highlight">L7</span> (HTTP/S)</li>
+                                                <li>Sử dụng <span class="highlight">OCI native Ingress</span></li>
+                                                <li>Hỗ trợ <span class="highlight">host-based/path-based</span> routing</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">quiz</i>
+                                    </div>
+                                    <h3 class="card-title">Mục đích chính của Load Balancer và Ingress Controller</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                        <div style="background: var(--oracle-red); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">A</div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 4px;">Thực hiện testing và monitoring performance metrics</div>
+                                            <div style="font-size: 0.9rem; color: #C62828;"><strong>Không phải mục đích chính</strong> - Đây là hoạt động quản lý</div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                        <div style="background: var(--oracle-red); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">B</div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 4px;">Expose running workloads internally and externally</div>
+                                            <div style="font-size: 0.9rem; color: #2E7D32;"><strong>Đúng</strong> - Đây là mục đích chính, cung cấp bridge giữa pods và clients</div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                        <div style="background: var(--oracle-red); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">C</div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 4px;">Quản lý packages với Helm charts</div>
+                                            <div style="font-size: 0.9rem; color: #C62828;"><strong>Không liên quan</strong> - Helm quản lý deployment, không liên quan đến traffic routing</div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 15px; display: flex; align-items: flex-start;">
+                                        <div style="background: var(--oracle-red); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 600; margin-right: 12px; flex-shrink: 0;">D</div>
+                                        <div>
+                                            <div style="font-weight: 600; margin-bottom: 4px;">Dần dần chuyển traffic từ source environment đến OKE</div>
+                                            <div style="font-size: 0.9rem; color: #C62828;"><strong>Không phải mục đích chính</strong> - Có thể sử dụng nhưng không phải chức năng chính</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="image-container">
+                                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #f5f5f5 0%, #eee 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; color: var(--oracle-red); font-size: 3rem;">
+                                    <i class="material-icons" style="font-size: 4rem;">view_in_ar</i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <img src="https://sfile.chatglm.cn/images-ppt/9a0fe45dbd3b.png" alt="Block Volume Migration Architecture">
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">quiz</i>
+                                    </div>
+                                    <h3 class="card-title">Câu hỏi thường gặp</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div style="margin-bottom: 15px;">
+                                        <strong>A. Đảm bảo đồng bộ hóa dữ liệu real-time</strong><br>
+                                        <span style="color: #C62828; font-weight: 600;">Sai</span> - Copy to another region là quá trình asynchronous, không real-time
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <strong>B. Sao chép Block Volume backups đến target region</strong><br>
+                                        <span style="color: #2E7D32; font-weight: 600;">Đúng</span> - Tính năng này cho phép sao chép backup sang region khác
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <strong>C. Tự động hóa quá trình migration bằng cách chuyển ứng dụng</strong><br>
+                                        <span style="color: #C62828; font-weight: 600;">Sai</span> - Chỉ di chuyển dữ liệu lưu trữ, không di chuyển ứng dụng
+                                    </div>
+                                    <div>
+                                        <strong>D. Nén dữ liệu backup trước khi chuyển</strong><br>
+                                        <span style="color: #C62828; font-weight: 600;">Sai</span> - Không có tính năng nén đặc biệt, dữ liệu đã được lưu trữ hiệu quả
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section id="introduction" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">cloud_sync</i>
+                    <h2>Giới thiệu về Migration trong OCI</h2>
+                </div>
+                <div class="section-content">
+                    <div class="grid-2">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">info</i>
+                                    </div>
+                                    <h3 class="card-title">Định nghĩa</h3>
+                                </div>
+                                <div class="card-content">
+                                    Migration trong <span class="highlight">Oracle Cloud Infrastructure</span> là quá trình chuyển đổi và di chuyển tài nguyên, ứng dụng, dữ liệu từ môi trường hiện tại sang OCI một cách hiệu quả và an toàn.
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">trending_up</i>
+                                    </div>
+                                    <h3 class="card-title">Tầm quan trọng</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li>Tăng tốc độ chuyển đổi số</li>
+                                        <li>Giảm chi phí vận hành</li>
+                                        <li>Cải thiện hiệu suất và khả năng mở rộng</li>
+                                        <li>Tăng cường bảo mật và độ tin cậy</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon">
+                                        <i class="material-icons">category</i>
+                                    </div>
+                                    <h3 class="card-title">Các loại hình Migration chính</h3>
+                                </div>
+                                <div class="card-content">
+                                    <ul>
+                                        <li><span class="highlight">Block Volume Migration</span> - Di chuyển lưu trữ dữ liệu</li>
+                                        <li><span class="highlight">VM Migration</span> - Di chuyển máy ảo</li>
+                                        <li><span class="highlight">Database Migration</span> - Di chuyển cơ sở dữ liệu</li>
+                                        <li><span class="highlight">Container Migration</span> - Di chuyển container</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="image-container">
+                                <img src="https://sfile.chatglm.cn/images-ppt/3c5b44c055ba.png" alt="Oracle Cloud Infrastructure Migration Architecture">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section id="summary" class="section">
+        <div class="section-container">
+            <div class="content-section">
+                <div class="section-header">
+                    <i class="material-icons">summarize</i>
+                    <h2>Tổng kết</h2>
+                </div>
+                <div class="section-content">
+                    <div style="font-size: 1.2rem; line-height: 1.6; margin-bottom: 30px; text-align: center;">
+                        <span class="highlight">Migration</span> trong Oracle Cloud Infrastructure đòi hỏi sự lựa chọn phương pháp phù hợp, lập kế hoạch kỹ lưỡng và quản lý hiệu quả các thành phần networking và security.
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">category</i>
+                                </div>
+                                <h3 class="card-title">Phương pháp Migration phù hợp</h3>
+                            </div>
+                            <div class="card-content">
+                                <ul>
+                                    <li><span class="highlight">Block Volume Migration</span> - Di chuyển dữ liệu lưu trữ</li>
+                                    <li><span class="highlight">HCX và OCVS</span> - Di chuyển VMware workloads</li>
+                                    <li><span class="highlight">OKE</span> - Di chuyển containerized applications</li>
+                                    <li><span class="highlight">Database Migration và ZDM</span> - Di chuyển databases</li>
+                                    <li><span class="highlight">OCM</span> - Di chuyển VMs đến OCI Compute</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">security</i>
+                                </div>
+                                <h3 class="card-title">Networking và Security</h3>
+                            </div>
+                            <div class="card-content">
+                                <ul>
+                                    <li><span class="highlight">Security Lists vs NSGs</span> - Subnet-level vs VNIC-level</li>
+                                    <li><span class="highlight">Routing trong VCN</span> - Định hướng traffic ra khỏi VCN</li>
+                                    <li><span class="highlight">BYOIP</span> - Sử dụng địa chỉ IP riêng</li>
+                                    <li><span class="highlight">FastConnect</span> - Kết nối private hiệu suất cao</li>
+                                    <li><span class="highlight">Local routing</span> - Tự động routing trong VCN</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">assignment</i>
+                                </div>
+                                <h3 class="card-title">Lập kế hoạch và chuẩn bị</h3>
+                            </div>
+                            <div class="card-content">
+                                <ul>
+                                    <li><span class="highlight">Assessment</span> - Đánh giá kỹ workloads</li>
+                                    <li><span class="highlight">Planning</span> - Lựa chọn phương pháp phù hợp</li>
+                                    <li><span class="highlight">Foundation</span> - Thiết lập IAM, network, security</li>
+                                    <li><span class="highlight">Tools Selection</span> - Chọn công cụ migration phù hợp</li>
+                                    <li><span class="highlight">Testing</span> - Validation trước cutover</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="material-icons">verified</i>
+                                </div>
+                                <h3 class="card-title">Best Practices</h3>
+                            </div>
+                            <div class="card-content">
+                                <ul>
+                                    <li><span class="highlight">Planning Phase</span> - Đánh giá, lựa chọn phương pháp, thiết lập foundation</li>
+                                    <li><span class="highlight">Execution Phase</span> - Staged migration, tự động hóa, backup, validate</li>
+                                    <li><span class="highlight">Post-Migration</span> - Monitor, tối ưu, cập nhật documentation</li>
+                                    <li><span class="highlight">Tools</span> - OCI Database Migration, ZDM, OCM, HCX</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--oracle-light); border-radius: 15px; padding: 30px; margin: 40px 0;">
+                        <h3 style="text-align: center; color: var(--oracle-red); margin-bottom: 25px; font-size: 1.5rem;">
+                            <i class="material-icons" style="vertical-align: middle; margin-right: 10px;">tips_and_updates</i>
+                            Khuyến nghị cho các tổ chức
+                        </h3>
+                        <div class="grid-4">
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="material-icons" style="color: var(--oracle-red); font-size: 3rem; margin-bottom: 15px;">rocket_launch</i>
+                                <h4 style="margin-bottom: 8px;">Bắt đầu với dự án nhỏ</h4>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="material-icons" style="color: var(--oracle-red); font-size: 3rem; margin-bottom: 15px;">build</i>
+                                <h4 style="margin-bottom: 8px;">Sử dụng công cụ của Oracle</h4>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="material-icons" style="color: var(--oracle-red); font-size: 3rem; margin-bottom: 15px;">school</i>
+                                <h4 style="margin-bottom: 8px;">Đầu tư vào training</h4>
+                            </div>
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="material-icons" style="color: var(--oracle-red); font-size: 3rem; margin-bottom: 15px;">auto_stories</i>
+                                <h4 style="margin-bottom: 8px;">Học từ case study</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-footer">
+                    <div class="footer-logo">
+                        <i class="material-icons">cloud</i>
+                        Oracle Cloud Infrastructure
+                    </div>
+                    <div>© 2025 Oracle Corporation</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Loading Animation
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 1000);
+        });
+
+        // Smooth Scrolling for Navigation
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+
+        // Progress Indicator
+        function updateProgressIndicator() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            document.getElementById('progressIndicator').style.width = progress + '%';
+        }
+
+        // Intersection Observer for Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                    
+                    // Animate cards with delay
+                    const cards = entry.target.querySelectorAll('.card, .toc-item, .workflow-step');
+                    cards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.classList.add('animate');
+                        }, index * 150);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        // Section Observer
+        const sectionObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.3 });
+
+        // Initialize Observers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Observe sections
+            document.querySelectorAll('.section').forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            // Observe content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                observer.observe(section);
+            });
+
+            // Add scroll event listener
+            window.addEventListener('scroll', updateProgressIndicator);
+
+            // Navigation link clicks
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    scrollToSection(targetId);
+                });
+            });
+
+            // Floating animation for hero elements
+            const floatingElements = document.querySelectorAll('.floating-element');
+            floatingElements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 2}s`;
+            });
+
+            // Parallax effect for hero section
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const parallax = document.querySelector('.hero-section');
+                if (parallax) {
+                    const speed = scrolled * 0.5;
+                    parallax.style.transform = `translateY(${speed}px)`;
+                }
+            });
+
+            // Card hover effects
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // Add ripple effect to buttons
+            document.querySelectorAll('.hero-cta, .nav-link, .toc-item').forEach(element => {
+                element.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.style.position = 'absolute';
+                    ripple.style.borderRadius = '50%';
+                    ripple.style.background = 'rgba(255, 255, 255, 0.3)';
+                    ripple.style.transform = 'scale(0)';
+                    ripple.style.animation = 'ripple 0.6s linear';
+                    ripple.style.pointerEvents = 'none';
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+
+        // Add ripple animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
